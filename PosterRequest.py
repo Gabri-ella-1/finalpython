@@ -21,8 +21,7 @@ def get_random_movie():
 
     # Grab Poster URL
     poster_url = "https://image.tmdb.org/t/p/w500" + movie["poster_path"]
-    # Return the movie title and overview
-    
+
     #movie, poster_url = get_random_movie()
     #print(movie)
     #print(poster_url)

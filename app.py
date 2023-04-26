@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 import databases
 import random
 from databases import *
@@ -7,6 +7,32 @@ import json
 
 app = Flask(__name__)
 
+import requests
+import random
+
+def get_random_movie():
+    # key from TMDB website which we need for all api requests
+    key = "a141575823e91856c7c532de60ea8eb6"
+    # This link specifically grabs popular movies so we dont fetch anything irrelevant 
+    url = f"https://api.themoviedb.org/3/movie/popular?api_key={key}"
+
+    # use .get() to grab top 20 popular movies and convert from json 
+    # they are stored in a dictionary object
+    response = requests.get(url).json()
+
+    #for i in response["results"]:
+    	#print(i["title"])
+
+    # Grab a random movie using random library, "results" is a key for the dict
+    movie = random.choice(response["results"])
+
+    # Grab Poster URL
+    poster_url = "https://image.tmdb.org/t/p/w500" + movie["poster_path"]
+
+    #movie, poster_url = get_random_movie()
+    #print(movie)
+    #print(poster_url)
+    return f"{movie['title']}", poster_url
 
 def make_db():
     con = databases.connect()
@@ -21,9 +47,44 @@ def NewUser():  # put application's code here
     return render_template('NewUser.html')
 
 
-@app.route('/NewMovie')
+@app.route('/NewMovie', methods =['POST', 'GET'])
 def NewMovie():  # put application's code here
-    return render_template('MoviePage.html')
+    if(request.method == 'POST'):
+        name = request.form.get('name')
+        Idnum = request.form.get('Idnum')
+    elif(request.method == 'GET'):
+        name = request.args.get('name')
+        Idnum = request.args.get('Idnum')
+    movieTitle, posterURL = get_random_movie()
+    return render_template('MoviePage.html', movieTitle=movieTitle, posterURL=posterURL, name = name, Idnum = Idnum)
+
+@app.route('/like', methods =['POST'])
+def like():
+    #Here we request the variables from the html page so that we can correcly process the input
+    movieTitle = request.form.get('movieTitle')
+    Idnum = request.form.get('Idnum')
+    name = request.form.get('name')
+    #We generate the movie title with the first 2 characters of the title and the last 2 characters
+    movieID = str(movieTitle[0] + movieTitle[1] + movieTitle[len(movieTitle) - 2] + movieTitle[len(movieTitle) - 1])
+    #we connect with the database so that we can grab any open matches
+    with sql.connect("TinMovie.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT UserID FROM OpenMatches WHERE MovieID = ?", (movieID,))
+        result = cur.fetchall()
+        #if there is none than we create a new open match
+        print(result)
+        if len(result) == 0:
+            add_open_match(con, Idnum, movieID, movieTitle)
+        else:
+            otherID, = result[0]
+            print(str(otherID) + " " + str(Idnum))
+            #if there is already an open match we check to see if it is with themselves
+            if int(Idnum) != int(otherID):
+                #if not we delete the open match and create a new match
+                add_match(con, Idnum, otherID, movieID, movieTitle)
+                remove_open_match(con, (movieID,))
+        #then after all that we redirect to the newmovie page
+        return redirect(url_for('NewMovie', name=name, Idnum=Idnum))
 
 @app.route('/Profile')
 def Profile():  # put application's code here
@@ -43,11 +104,11 @@ def adduser():
             passw = request.form['Password']
             pref= request.form['Preferences']
             cont = request.form['Contact']
-            Idnum = random.randint(1,300)
+            Idnum = random.randint(1,30000)
 
             with sql.connect("TinMovie.db") as con:
                 add_user(con, name, passw, Idnum, pref, cont)
-            return render_template('Profile.html')
+            return render_template('Profile.html', Idnum = Idnum, name = name, cont = cont)
 
 
 

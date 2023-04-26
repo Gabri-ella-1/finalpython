@@ -1,10 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+	<title>Find a Friend!</title>
+	<style>
+		body {
+			text-align: center;
+		}
+
+        img {
+            max-width: 50%;
+			max-height: 50%;
+        }
+		button {
+			margin: 10px;
+			padding: 10px 20px;
+			background-color: green;
+			border: none;
+			color: white;
+			font-size: 16px;
+			cursor: pointer;
+		}
+		.top-left {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .top-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+	</style>
 </head>
 <body>
-    <a href = "/">New user login</a>
+    <header>
+        <h1>Find a Movie Friend!</h1>
+    </header>
+	<h2>{{movieTitle}}</h2>
+	<div class="top-left">{{name}}</div>
+    <div class="top-right">{{Idnum}}</div>
+	<img src={{posterURL}} alt="Movie poster">
+	<br>
+	<!--button implementation is from this guide
+	https://predictivehacks.com/?all-tips=how-to-add-action-buttons-in-flask
+	and their formatting is from this
+	https://www.w3schools.com/css/css3_buttons.asp-->
+	<form method="post" action="/like">
+		<input type="hidden" name="movieTitle" value="{{ movieTitle }}" />
+		<input type="hidden" name="Idnum" value="{{ Idnum }}" />
+		<input type="hidden" name="name" value="{{ name }}" />
+		<button type="submit" name="like" value="1">Like</button>
+	</form>
+	<form method="get" action="/NewMovie">
+		<button type="submit">Dislike</button>
+		<input type="hidden" name="name" value="{{ name }}">
+		<input type="hidden" name="Idnum" value="{{ Idnum }}">
+	  </form>
+	<br>
+	<a href="#">Return to Menu</a>
 </body>
 </html>

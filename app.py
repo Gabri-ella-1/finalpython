@@ -99,11 +99,18 @@ def Profile():  # put application's code here
         cur.execute("SELECT * FROM UserInfo WHERE UserID = ?", (session['UserID'],))
         values = cur.fetchone()
         print(values)
-        #print(values[0]["Name"])
-
-        #getmatches = cur.execute("SELECT UserId_Two, MovieName FROM Matches WHERE UserID_One = (?) OR UserID_Two = (?)",((session['UserID']), (session['UserID'])) )
-        #match=getmatches.fetchall()
-        return render_template('Profile.html', values = values)#, match = match)
+        cur.execute("""SELECT 
+                    user1.Name as UserOne, user2.Name as UserTwo, 
+                    user1.Contact as u1Contact, user2.Contact as u2Contact, 
+                    m.MovieName as Movie
+                    FROM Matches m 
+                    JOIN UserInfo user1 ON m.UserID_One = user1.UserID 
+                    JOIN UserInfo user2 ON m.UserID_Two = user2.UserID
+                    WHERE UserID_One = (?) OR UserID_Two = (?)"""
+                    ,((session['UserID']), (session['UserID'])) )
+        match = cur.fetchall()
+        print(match)
+        return render_template('Profile.html', values = values, match = match, name = session['Name'], Idnum = session['UserID'])
     return redirect(url_for('adduser'))
 
 @app.route('/newlog', methods =['POST', 'GET'])

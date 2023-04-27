@@ -1,12 +1,12 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, session
 import databases
-import random
 from databases import *
 import sqlite3 as sql
-import json
+
+
 
 app = Flask(__name__)
-
+app.secret_key='shhh'
 import requests
 import random
 
@@ -40,6 +40,9 @@ def make_db():
 
 @app.route('/')
 def hello_world():  # put application's code here
+    session.pop('loggedin', None)
+    session.pop('Username', None)
+    session.pop('Password', None)
     return render_template('login.html')
 
 @app.route('/NewUser')
@@ -88,27 +91,48 @@ def like():
 
 @app.route('/Profile')
 def Profile():  # put application's code here
-    return render_template('Profile.html')
+    if 'loggedin' in session:
+        con = sql.connect("TinMovie.db")
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        getprofile=cur.execute("SELECT Name, Preference, Contact FROM UserInfo WHERE UserID = (?)", (session['Username'],))
+        getmatches=cur.execute("SELECT UserId_Two, MovieName FROM Matches WHERE UserID_One = (?) OR UserID_Two = (?)",((session['UserID']), (session['UserID'])) )
+        return render_template('Profile.html', values = getprofile.fetchall(), match=getmatches.fetchall())
+    return redirect(url_for('adduser'))
 
 @app.route('/newlog', methods =['POST', 'GET'])
 def newlog():
-    if request.method == 'POST':
+    if request.method == 'POST' and 'Name' in request.form and 'Password' in request.form:
             name = request.form['Name']
             passw = request.form['Password']
+    con = sql.connect("TinMovie.db")
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    cur.execute("SELECT * FROM UserInfo WHERE Name = (?) AND Password = (?)", (name, passw))
+    UserInfo = cur.fetchone()
+    if UserInfo:
+        session['loggedin']=True
+        session['Name'] = UserInfo['Name']
+        session['Password']= UserInfo['Password']
+        session['UserID']=UserInfo['UserID']
+    else:
+        msg="Incorrect username/password"
+        return render_template('login.html', msg=msg)
     return render_template('Profile.html')
 
 @app.route('/adduser', methods =['POST', 'GET'])
 def adduser():
-    if request.method == 'POST':
+    if request.method == 'POST' and 'Name' in request.form and 'Password' in request.form:
             name = request.form['Name']
             passw = request.form['Password']
-            pref= request.form['Preferences']
+            pref = request.form['Preferences']
             cont = request.form['Contact']
             Idnum = random.randint(1,30000)
 
             with sql.connect("TinMovie.db") as con:
                 add_user(con, name, passw, Idnum, pref, cont)
-            return render_template('Profile.html', Idnum = Idnum, name = name, cont = cont)
+            msg="Congrats, your registration was succesful, please log in: "
+            return render_template('login.html', msg = msg )
 
 
 

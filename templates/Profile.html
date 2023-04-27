@@ -5,6 +5,24 @@
     <title>User Profile </title>
 </head>
 <body>
+    "{% for row in values %}
+    <table border="1">
+        <thread>
+            <tr>
+                <td>Name</td>
+                <td>Preferences</td>
+                <td>Contact</td>
+            </tr>t
+        </thread>
+        <tbody>
+        <tr>
+            <td>{{row["Name"]}}</td>
+            <td>{{row["Preferences"]}}</td>
+            <td>{{ row["Contact"]}}</td>
+        </tr>
+        </tbody>
+    {% endfor %}"
+    </table>
     <a href="/NewMovie?name={{name}}&Idnum={{Idnum}}">Find movie watchers</a>
     <a href = "/">Log out</a>
 </body>

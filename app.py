@@ -38,6 +38,7 @@ def make_db():
     con = databases.connect()
     databases.make_tables(con)
 
+
 @app.route('/')
 def hello_world():  # put application's code here
     session.pop('loggedin', None)
@@ -129,10 +130,12 @@ def newlog():
         session['Name'] = UserInfo['Name']
         session['Password']= UserInfo['Password']
         session['UserID']=UserInfo['UserID']
+        #session['Role']=UserInfo['Role']
     else:
         msg = "Incorrect username/password"
         return render_template('login.html', msg=msg)
-    return redirect(url_for('Profile', name=session['Name'], Idnum=session['UserID']))
+
+    return redirect(url_for('Profile', name=session['Name'], Idnum=session['UserID'], Role=UserInfo['Role']))
     #return render_template('Profile.html', name = session['Name'], Idnum = session['UserID'])
 
 @app.route('/adduser', methods =['POST', 'GET'])
@@ -143,11 +146,30 @@ def adduser():
             pref = request.form['Preferences']
             cont = request.form['Contact']
             Idnum = random.randint(1,30000)
-
+            a=input(print("Do you want this user to have privilages?"))
+            if a == 'y':
+                rol = 1
+            else: rol = 0
+            print(rol)
             with sql.connect("TinMovie.db") as con:
-                add_user(con, name, passw, Idnum, pref, cont)
+                add_user(con, name, passw, Idnum, pref, cont, rol)
             msg="Congrats, your registration was succesful, please log in: "
             return render_template('login.html', msg = msg )
+
+
+@app.route('/allUsers')
+def allUsers():
+    if (session['Role']!=1):
+        return render_template('Profile.html')
+    con = sql.connect("TinMovie.db")
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    cur.execute("SELECT Name, UserID, Contact, Role FROM UserInfo;")
+    all = cur.fetchall()
+    print(all)
+    return render_template('allUsers.html', all=all)
+
+
 
 
 
@@ -155,6 +177,8 @@ def adduser():
 answer=input("Do you want to create the database? (y/n): ")
 if answer == 'y':
     make_db()
+
+
 
 if __name__ == '__main__':
     app.run()

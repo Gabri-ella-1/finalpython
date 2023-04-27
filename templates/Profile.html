@@ -1,29 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
-    <meta charset="UTF-8">
     <title>User Profile </title>
 </head>
 <body>
-    "{% for row in values %}
-    <table border="1">
+    <h1>{{values["Name"]}}</h1>
+    <table border=1>
         <thread>
-            <tr>
-                <td>Name</td>
-                <td>Preferences</td>
-                <td>Contact</td>
-            </tr>t
+            <td>Name</td>
+            <td>Preferences</td>
+            <td>Contact</td>
         </thread>
-        <tbody>
+            <tr>
+                <td>{{values["Name"]}}</td>
+                <td>{{values["Preferences"]}}</td>
+                <td>{{values["Contact"]}}</td>
+            </tr>
+        {% for row in values %}
         <tr>
-            <td>{{row["Name"]}}</td>
-            <td>{{row["Preferences"]}}</td>
-            <td>{{ row["Contact"]}}</td>
+            <td>{{values["Name"]}}</td>
+            <td>{{values["Preferences"]}}</td>
+            <td>{{values["Contact"]}}</td>
         </tr>
-        </tbody>
-    {% endfor %}"
+    {% endfor %}
     </table>
+
     <a href="/NewMovie?name={{name}}&Idnum={{Idnum}}">Find movie watchers</a>
     <a href = "/">Log out</a>
+
 </body>
 </html>

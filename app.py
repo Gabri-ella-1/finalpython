@@ -2,13 +2,13 @@ from flask import Flask, redirect, render_template, request, url_for, session
 import databases
 from databases import *
 import sqlite3 as sql
-
+import requests
+import random
 
 
 app = Flask(__name__)
 app.secret_key='shhh'
-import requests
-import random
+
 
 def get_random_movie():
     # key from TMDB website which we need for all api requests
@@ -95,30 +95,38 @@ def Profile():  # put application's code here
         con = sql.connect("TinMovie.db")
         con.row_factory = sql.Row
         cur = con.cursor()
-        getprofile=cur.execute("SELECT Name, Preference, Contact FROM UserInfo WHERE UserID = (?)", (session['Username'],))
-        getmatches=cur.execute("SELECT UserId_Two, MovieName FROM Matches WHERE UserID_One = (?) OR UserID_Two = (?)",((session['UserID']), (session['UserID'])) )
-        return render_template('Profile.html', values = getprofile.fetchall(), match=getmatches.fetchall())
+        print(session['UserID'])
+        cur.execute("SELECT * FROM UserInfo WHERE UserID = ?", (session['UserID'],))
+        values = cur.fetchone()
+        print(values)
+        #print(values[0]["Name"])
+
+        #getmatches = cur.execute("SELECT UserId_Two, MovieName FROM Matches WHERE UserID_One = (?) OR UserID_Two = (?)",((session['UserID']), (session['UserID'])) )
+        #match=getmatches.fetchall()
+        return render_template('Profile.html', values = values)#, match = match)
     return redirect(url_for('adduser'))
 
 @app.route('/newlog', methods =['POST', 'GET'])
 def newlog():
     if request.method == 'POST' and 'Name' in request.form and 'Password' in request.form:
-            name = request.form['Name']
-            passw = request.form['Password']
+        name = request.form['Name']
+        passw = request.form['Password']
     con = sql.connect("TinMovie.db")
     con.row_factory = sqlite3.Row
     cur = con.cursor()
-    cur.execute("SELECT * FROM UserInfo WHERE Name = (?) AND Password = (?)", (name, passw))
+    cur.execute("SELECT * FROM UserInfo WHERE Name = ? AND Password = ?", (name, passw))
     UserInfo = cur.fetchone()
+    print(UserInfo)
     if UserInfo:
         session['loggedin']=True
         session['Name'] = UserInfo['Name']
         session['Password']= UserInfo['Password']
         session['UserID']=UserInfo['UserID']
     else:
-        msg="Incorrect username/password"
+        msg = "Incorrect username/password"
         return render_template('login.html', msg=msg)
-    return render_template('Profile.html')
+    return redirect(url_for('Profile', name=session['Name'], Idnum=session['UserID']))
+    #return render_template('Profile.html', name = session['Name'], Idnum = session['UserID'])
 
 @app.route('/adduser', methods =['POST', 'GET'])
 def adduser():
